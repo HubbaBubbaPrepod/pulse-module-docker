@@ -1,5 +1,7 @@
 # Pulse Module Docker
 
+[Сайт Pulse](https://pulse.hubba-cloud.ru/) · [Практические руководства](https://pulse.hubba-cloud.ru/guides/)
+
 **Русский** · [English](README.en.md)
 
 > Нативный сборщик Docker Engine для Pulse Monitor и Pulse Agent.
