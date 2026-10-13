@@ -1,5 +1,5 @@
 #requires -Version 7.4
-param([string]$GoExe='go',[string]$Version='1.0.1',[string]$GoToolchain='go1.27.2')
+param([string]$GoExe='go',[string]$Version='1.0.2',[string]$GoToolchain='go1.27.2')
 $ErrorActionPreference='Stop'
 $Version=$Version.TrimStart('v')
 if($Version -notmatch '^\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?$'){throw 'Invalid module version'}

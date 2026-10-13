@@ -42,7 +42,7 @@ type dockerStats struct {
 
 func statsValues(s dockerStats) (*float64, float64, float64) {
 	var cpu *float64
-	if s.CPU.System > s.PreCPU.System && s.CPU.CPUUsage.Total >= s.PreCPU.CPUUsage.Total {
+	if s.PreCPU.System > 0 && s.CPU.System > s.PreCPU.System && s.CPU.CPUUsage.Total >= s.PreCPU.CPUUsage.Total {
 		cores := s.CPU.Online
 		if cores == 0 {
 			cores = len(s.CPU.CPUUsage.PerCPU)
@@ -125,61 +125,82 @@ func collect(ctx context.Context, client *http.Client, logContainer string) (map
 	}
 	rows := make([]map[string]any, len(containers))
 	semaphore := make(chan struct{}, 8)
+	previous := make([]dockerStats, len(containers))
 	var wg sync.WaitGroup
-	for i, c := range containers {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			select {
-			case semaphore <- struct{}{}:
-			case <-ctx.Done():
-				return
-			}
-			defer func() { <-semaphore }()
-			name := c.ID[:min(12, len(c.ID))]
-			if len(c.Names) > 0 {
-				name = strings.TrimPrefix(c.Names[0], "/")
-			}
-			row := map[string]any{"id": c.ID, "name": name, "image": c.Image, "state": c.State, "status": c.Status, "cpu": nil, "memory": nil, "memoryLimit": nil, "networkIn": nil, "networkOut": nil}
-			if c.State == "running" {
-				if raw, err := get(ctx, client, "/containers/"+c.ID+"/stats?stream=false&one-shot=true"); err == nil {
-					var stats dockerStats
-					if json.Unmarshal(raw, &stats) == nil {
-						cpu, memory, limit := statsValues(stats)
-						row["cpu"] = cpu
-						row["memory"] = memory
-						row["memoryLimit"] = limit
-						var in, out uint64
-						for _, network := range stats.Networks {
-							in += network.Incoming
-							out += network.Outgoing
+	for pass := 0; pass < 2; pass++ {
+		for i, c := range containers {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				select {
+				case semaphore <- struct{}{}:
+				case <-ctx.Done():
+					return
+				}
+				defer func() { <-semaphore }()
+				name := c.ID[:min(12, len(c.ID))]
+				if len(c.Names) > 0 {
+					name = strings.TrimPrefix(c.Names[0], "/")
+				}
+				row := map[string]any{"id": c.ID, "name": name, "image": c.Image, "state": c.State, "status": c.Status, "cpu": nil, "memory": nil, "memoryLimit": nil, "networkIn": nil, "networkOut": nil}
+				if c.State == "running" {
+					if raw, err := get(ctx, client, "/containers/"+c.ID+"/stats?stream=false&one-shot=true"); err == nil {
+						var stats dockerStats
+						if json.Unmarshal(raw, &stats) == nil {
+							// One-shot responses have no previous CPU cycle. Compare two
+							// fresh samples instead of dividing lifetime counters.
+							stats.PreCPU.CPUUsage.Total = previous[i].CPU.CPUUsage.Total
+							stats.PreCPU.System = previous[i].CPU.System
+							previous[i] = stats
+							cpu, memory, limit := statsValues(stats)
+							row["cpu"] = cpu
+							row["memory"] = memory
+							row["memoryLimit"] = limit
+							var in, out uint64
+							for _, network := range stats.Networks {
+								in += network.Incoming
+								out += network.Outgoing
+							}
+							row["networkIn"] = float64(in) / (1024 * 1024)
+							row["networkOut"] = float64(out) / (1024 * 1024)
 						}
-						row["networkIn"] = float64(in) / (1024 * 1024)
-						row["networkOut"] = float64(out) / (1024 * 1024)
 					}
 				}
+				rows[i] = row
+			}()
+		}
+		wg.Wait()
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		if pass == 0 {
+			timer := time.NewTimer(time.Second)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				return nil, ctx.Err()
+			case <-timer.C:
 			}
-			rows[i] = row
-		}()
-	}
-	wg.Wait()
-	if ctx.Err() != nil {
-		return nil, ctx.Err()
+		}
 	}
 	running := 0
 	cpu := 0.
 	memory := 0.
-	knownCPU := false
+	completeCPU, completeMemory := true, true
 	for _, r := range rows {
-		if r["state"] == "running" {
-			running++
+		if r["state"] != "running" {
+			continue
 		}
+		running++
 		if v, ok := r["cpu"].(*float64); ok && v != nil {
 			cpu += *v
-			knownCPU = true
+		} else {
+			completeCPU = false
 		}
 		if v, ok := r["memory"].(float64); ok {
 			memory += v
+		} else {
+			completeMemory = false
 		}
 	}
 	logs := []string{}
@@ -201,11 +222,14 @@ func collect(ctx context.Context, client *http.Client, logContainer string) (map
 			logs = strings.Split(strings.TrimSpace(decodeLogs(raw)), "\n")
 		}
 	}
-	var totalCPU any
-	if knownCPU {
+	var totalCPU, totalMemory any
+	if completeCPU {
 		totalCPU = cpu
 	}
-	return map[string]any{"engine": map[string]any{"version": version.Version, "containers": len(rows), "running": running, "truncated": truncated}, "containers": rows, "usage": map[string]any{"cpu": totalCPU, "memory": memory}, "logs": logs}, nil
+	if completeMemory {
+		totalMemory = memory
+	}
+	return map[string]any{"engine": map[string]any{"version": version.Version, "containers": len(rows), "running": running, "truncated": truncated}, "containers": rows, "usage": map[string]any{"cpu": totalCPU, "memory": totalMemory}, "logs": logs}, nil
 }
 func run() error {
 	var input struct {
