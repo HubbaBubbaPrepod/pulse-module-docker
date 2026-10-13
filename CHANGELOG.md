@@ -1,20 +1,22 @@
+[Русский](CHANGELOG.ru.md)
+
 # Changelog
 
-## [Unreleased]
+## Unreleased
 
-## [1.0.2]
+## 1.0.2
 
 ### Fixed
 
-- CPU использует разницу двух текущих замеров с интервалом в одну секунду, а не отношение накопленных счётчиков за всё время.
-- При недоступных метриках работающего контейнера суммарные показатели остаются неизвестными вместо неполной суммы.
+- CPU is calculated from two current samples one second apart rather than the ratio of accumulated lifetime counters.
+- Totals remain unknown when a running container's metrics are unavailable, instead of showing a partial sum.
 
-## [1.0.1]
+## 1.0.1
 
 ### Added
 
-- Самостоятельный репозиторий, MIT-лицензия, инструкции сборки и установки.
-- Отдельная сборка JSON-пакета Linux amd64/arm64 и Windows amd64, исходный архив и SHA-256 checksums.
+- Standalone repository, MIT license, build and installation documentation.
+- JSON packaging for Linux amd64/arm64 and Windows amd64, a source archive, and SHA-256 checksums.
 
 ### Fixed
 
@@ -22,15 +24,13 @@
 
 ### Notes
 
-- Модуль сохраняет `id: docker`, `schemaVersion: 1`, `protocol: 1` и использует независимую версию пакета.
-- Совместимый первый публичный набор: Pulse Monitor v0.4.0, Pulse Agent v0.4.0, Docker-модуль v1.0.1.
-- v1.0.1 предназначена для нового содержимого пакета; уже установленная v1.0.0 остаётся неизменной.
+- The module retains `id: docker`, `schemaVersion: 1`, and `protocol: 1`, with an independent package version.
+- The first public set combines Pulse Monitor v0.4.0, Pulse Agent v0.4.0, and Docker module v1.0.1.
+- v1.0.1 identifies new package content; an installed v1.0.0 remains unchanged.
 
-## [1.0.0]
+## 1.0.0
 
-- Исходный Docker-сборщик: версия движка, список контейнеров, ресурсные показатели, сетевые счётчики и необязательные последние журналы контейнера.
-- Нативный процесс с JSON stdin/stdout для протокола модулей v1. Пакет предшествовал выделению самостоятельного репозитория.
+### Added
 
-### Fixed
-
-- Windows Docker named-pipe connections use asynchronous handles and retry a busy pipe within the request deadline.
+- Original Docker collector: engine version, containers, resource metrics, network counters, and optional recent container logs.
+- Native JSON stdin/stdout process for module protocol v1. This package predates the standalone repository.

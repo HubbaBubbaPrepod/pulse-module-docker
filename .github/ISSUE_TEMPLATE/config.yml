@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Private vulnerability report / Приватный отчёт об уязвимости
+    url: https://github.com/HubbaBubbaPrepod/pulse-module-docker/security/advisories/new
+    about: Report vulnerabilities privately / Сообщайте об уязвимостях приватно
+  - name: Support / Поддержка
+    url: https://github.com/HubbaBubbaPrepod/pulse-module-docker/blob/main/SUPPORT.md
+    about: Read troubleshooting and reporting guidance / Диагностика и подготовка отчёта

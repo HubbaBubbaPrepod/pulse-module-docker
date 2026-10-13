@@ -1,0 +1,28 @@
+[English](CONTRIBUTING.md)
+
+# Участие в разработке
+
+## Подготовка и проверки
+
+Установите Go 1.23+ и PowerShell 7.4+ для упаковки. Клонируйте репозиторий и выполните из его корня:
+
+```powershell
+git clone https://github.com/HubbaBubbaPrepod/pulse-module-docker.git
+cd pulse-module-docker
+go build ./...
+go test ./...
+go vet ./...
+./scripts/build.ps1 -Version 1.0.2
+```
+
+Скрипт упаковки выбирает Go 1.27.2; используйте `-GoExe`, если Go отсутствует в PATH. CI запускает vet и тесты на Linux и Windows, race-тесты — на Linux. Кросс-компиляция не подтверждает работу на платформе: для проверки выполнения нужны реальный Docker Engine и доступ к Unix socket или Windows named pipe. Укажите ОС, архитектуру, версию Docker, права учётной записи службы, команды и ограничения. Не заявляйте проверку недоступной платформы.
+
+## Изменения и pull requests
+
+Ограничьте изменения заявленной проблемой. Опишите поведение до и после, обновите соответствующие тесты и обе языковые версии затронутой документации. Отразите изменения для пользователя в [CHANGELOG.md](CHANGELOG.md) и [CHANGELOG.ru.md](CHANGELOG.ru.md).
+
+Согласуйте изменения полей, представлений и протокола с [Pulse Monitor](https://github.com/HubbaBubbaPrepod/pulse-monitor) и [Pulse Agent](https://github.com/HubbaBubbaPrepod/pulse-agent); обновите манифест и опишите совместимость. Изменения бинарников выпускайте под новой версией модуля. Не переписывайте существующий пакет или тег.
+
+Тема коммита: `type(scope): summary`, повелительное наклонение, до 72 символов, без точки в конце. В PR опишите проблему, изменения, фактические проверки и риски. Разделяйте компиляцию, автоматические тесты и проверки с Docker Engine.
+
+Соблюдайте [правила общения](CODE_OF_CONDUCT.ru.md). Для ошибок и предложений используйте [Issues](https://github.com/HubbaBubbaPrepod/pulse-module-docker/issues). Удаляйте credentials и чувствительные журналы из отчётов; об уязвимостях сообщайте [приватно](SECURITY.ru.md). Вклад распространяется под [MIT](LICENSE).
