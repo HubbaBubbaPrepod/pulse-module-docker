@@ -41,23 +41,23 @@ The package includes **Linux amd64/arm64** and **Windows amd64** binaries. Go an
 
 ## Configuration
 
-| Field | Default | Purpose |
-|---|---|---|
-| `socket` | Empty string | Unix socket or Windows named pipe; empty selects the platform default |
-| `logContainer` | Empty string | Optional container ID for logs, at least 12 characters |
+| Field          | Default      | Purpose                                                               |
+| -------------- | ------------ | --------------------------------------------------------------------- |
+| `socket`       | Empty string | Unix socket or Windows named pipe; empty selects the platform default |
+| `logContainer` | Empty string | Optional container ID for logs, at least 12 characters                |
 
 Linux defaults to `/var/run/docker.sock`; Windows to `\\.\pipe\docker_engine`. For rootless Docker, specify the user's socket and grant the agent service access. On Windows, check whether the service account can access the selected engine's named pipe: installing Docker Desktop alone does not guarantee access.
 
 ## Metrics and limits
 
-| Metric | Meaning |
-|---|---|
-| Containers | At most 100 entries; `truncated` indicates a limited list, and the container count refers to that list |
-| CPU | Two batched passes of current statistics one second apart; 100% means one fully used CPU core |
-| Memory | Container memory usage excluding Linux file cache; Memory total sums running containers rather than server RAM |
-| Network | Cumulative received and sent counters, not transfer rates |
-| Logs | The selected container's last 50 lines; the module does not retain a full archive |
-| Charts | Recent measurements within the current dashboard view |
+| Metric     | Meaning                                                                                                        |
+| ---------- | -------------------------------------------------------------------------------------------------------------- |
+| Containers | At most 100 entries; `truncated` indicates a limited list, and the container count refers to that list         |
+| CPU        | Two batched passes of current statistics one second apart; 100% means one fully used CPU core                  |
+| Memory     | Container memory usage excluding Linux file cache; Memory total sums running containers rather than server RAM |
+| Network    | Cumulative received and sent counters, not transfer rates                                                      |
+| Logs       | The selected container's last 50 lines; the module does not retain a full archive                              |
+| Charts     | Recent measurements within the current dashboard view                                                          |
 
 Statistics are collected for at most 100 containers. If a running container's metrics are unavailable, the affected total stays unknown (`—`) instead of displaying a partial sum. Unknown does not mean zero.
 
@@ -97,11 +97,11 @@ CI runs `go vet` and tests on Linux and Windows, plus the race detector on Linux
 
 ## Pulse ecosystem
 
-| Repository | Purpose |
-|---|---|
-| [Pulse Monitor](https://github.com/HubbaBubbaPrepod/pulse-monitor) | Dashboard, servers, module packages and views |
-| [Pulse Agent](https://github.com/HubbaBubbaPrepod/pulse-agent) | Host metric collection and execution of assigned modules |
-| [Pulse Module Docker](https://github.com/HubbaBubbaPrepod/pulse-module-docker) | This Docker Engine collector |
+| Repository                                                                     | Purpose                                                  |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| [Pulse Monitor](https://github.com/HubbaBubbaPrepod/pulse-monitor)             | Dashboard, servers, module packages and views            |
+| [Pulse Agent](https://github.com/HubbaBubbaPrepod/pulse-agent)                 | Host metric collection and execution of assigned modules |
+| [Pulse Module Docker](https://github.com/HubbaBubbaPrepod/pulse-module-docker) | This Docker Engine collector                             |
 
 ## License
 

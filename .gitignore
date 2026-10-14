@@ -1,3 +1,6 @@
 artifacts/
 *.exe
 .env*
+
+# Local formatting tools
+node_modules/

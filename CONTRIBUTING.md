@@ -26,3 +26,14 @@ Coordinate field, view, and protocol changes with [Pulse Monitor](https://github
 Use commit subjects in the form `type(scope): summary`, in imperative mood, at most 72 characters, without a trailing period. PRs should describe the problem, changes, actual validation, and risks. Separate compilation, automated tests, and checks against Docker Engine.
 
 Follow the [community conduct rules](CODE_OF_CONDUCT.md). Use [Issues](https://github.com/HubbaBubbaPrepod/pulse-module-docker/issues) for bugs and proposals. Remove credentials and sensitive container logs from reports; use [private reporting](SECURITY.md) for vulnerabilities. Contributions are licensed under [MIT](LICENSE).
+
+## Formatting
+
+Node.js 22.13+ is required for the development formatter. Install the pinned local version with `npm ci`. Node.js is not required to run the Go binaries.
+
+```shell
+npm run format
+npm run format:check
+```
+
+Prettier formats supported source files, JSON, CSS, Markdown and YAML. Go files use `gofmt`. Generated files, local data and verification files are excluded through `.prettierignore`. CI checks formatting before accepting changes.

@@ -6,16 +6,60 @@
   "name": "Docker",
   "author": "Pulse contributors",
   "description": "Local Docker Engine: containers, resource usage and container logs.",
-  "permissions": ["Read Docker Engine API through the local socket or named pipe. Socket access has the privileges of the Docker daemon."],
+  "permissions": [
+    "Read Docker Engine API through the local socket or named pipe. Socket access has the privileges of the Docker daemon."
+  ],
   "fields": [
-    {"key": "socket", "label": "Socket / named pipe (empty: platform default)", "type": "text", "default": ""},
-    {"key": "logContainer", "label": "Container ID for logs (optional, 12+ characters)", "type": "text", "default": ""}
+    {
+      "key": "socket",
+      "label": "Socket / named pipe (empty: platform default)",
+      "type": "text",
+      "default": ""
+    },
+    {
+      "key": "logContainer",
+      "label": "Container ID for logs (optional, 12+ characters)",
+      "type": "text",
+      "default": ""
+    }
   ],
   "views": [
-    {"kind": "cards", "title": "Docker Engine", "key": "engine", "columns": [{"key": "version", "label": "Version"}, {"key": "containers", "label": "Containers"}, {"key": "running", "label": "Running"}, {"key": "truncated", "label": "List limited to 100"}]},
-    {"kind": "table", "title": "Containers", "key": "containers", "columns": [{"key": "name", "label": "Name"}, {"key": "image", "label": "Image"}, {"key": "state", "label": "State"}, {"key": "cpu", "label": "CPU", "unit": "%"}, {"key": "memory", "label": "Memory", "unit": "MiB"}, {"key": "memoryLimit", "label": "Memory limit", "unit": "MiB"}, {"key": "networkIn", "label": "Network received", "unit": "MiB"}, {"key": "networkOut", "label": "Network sent", "unit": "MiB"}]},
-    {"kind": "chart", "title": "Container resource usage", "key": "usage", "columns": [{"key": "cpu", "label": "CPU total", "unit": "%"}, {"key": "memory", "label": "Memory total", "unit": "MiB"}]},
-    {"kind": "logs", "title": "Container logs", "key": "logs", "columns": []}
+    {
+      "kind": "cards",
+      "title": "Docker Engine",
+      "key": "engine",
+      "columns": [
+        { "key": "version", "label": "Version" },
+        { "key": "containers", "label": "Containers" },
+        { "key": "running", "label": "Running" },
+        { "key": "truncated", "label": "List limited to 100" }
+      ]
+    },
+    {
+      "kind": "table",
+      "title": "Containers",
+      "key": "containers",
+      "columns": [
+        { "key": "name", "label": "Name" },
+        { "key": "image", "label": "Image" },
+        { "key": "state", "label": "State" },
+        { "key": "cpu", "label": "CPU", "unit": "%" },
+        { "key": "memory", "label": "Memory", "unit": "MiB" },
+        { "key": "memoryLimit", "label": "Memory limit", "unit": "MiB" },
+        { "key": "networkIn", "label": "Network received", "unit": "MiB" },
+        { "key": "networkOut", "label": "Network sent", "unit": "MiB" }
+      ]
+    },
+    {
+      "kind": "chart",
+      "title": "Container resource usage",
+      "key": "usage",
+      "columns": [
+        { "key": "cpu", "label": "CPU total", "unit": "%" },
+        { "key": "memory", "label": "Memory total", "unit": "MiB" }
+      ]
+    },
+    { "kind": "logs", "title": "Container logs", "key": "logs", "columns": [] }
   ],
   "binaries": {}
 }
