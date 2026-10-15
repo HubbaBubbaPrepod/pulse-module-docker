@@ -1,5 +1,5 @@
 #requires -Version 7.4
-param([string]$GoExe='go',[string]$Version='1.0.2',[string]$GoToolchain='go1.27.2')
+param([string]$GoExe='go',[string]$Version='1.0.3',[string]$GoToolchain='go1.27.2')
 $ErrorActionPreference='Stop'
 $Version=$Version.TrimStart('v')
 if($Version -notmatch '^\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?$'){throw 'Invalid module version'}
@@ -29,7 +29,7 @@ try {
     foreach($required in @('README.md','LICENSE','CHANGELOG.md')){if(-not (Test-Path $required)){throw "Source release requires $required"}}
     $stage=Join-Path $root ('artifacts/source-'+[guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory $stage | Out-Null
-    foreach($file in Get-ChildItem -LiteralPath $root -File){if($file.Extension -eq '.go' -or $file.Name -match '^(README|CHANGELOG|CONTRIBUTING|SECURITY|SUPPORT|CODE_OF_CONDUCT)(\.(en|ru))?\.md$' -or $file.Name -in @('go.mod','go.sum','manifest.json','LICENSE','.gitignore')){Copy-Item -LiteralPath $file.FullName -Destination $stage}}
+    foreach($file in Get-ChildItem -LiteralPath $root -File){if($file.Extension -eq '.go' -or $file.Name -match '^(README|CHANGELOG|CONTRIBUTING|SECURITY|SUPPORT|CODE_OF_CONDUCT)(\.(en|ru))?\.md$' -or $file.Name -in @('go.mod','go.sum','manifest.json','pulse-marketplace.json','LICENSE','.gitignore')){Copy-Item -LiteralPath $file.FullName -Destination $stage}}
     foreach($directory in @('scripts','.github','docs')){if(Test-Path (Join-Path $root $directory)){Copy-Item -LiteralPath (Join-Path $root $directory) -Destination $stage -Recurse}}
     $archive=Join-Path $release "pulse-module-docker_v${Version}_source.zip"
     Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $archive -Force

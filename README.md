@@ -22,7 +22,7 @@ Pulse Monitor ← карточки, таблица, графики и журна
 ## Установка
 
 1. Установите [Pulse Monitor](https://github.com/HubbaBubbaPrepod/pulse-monitor) и [Pulse Agent](https://github.com/HubbaBubbaPrepod/pulse-agent), подключите реальный сервер. Первый публичный набор использует панель и агент **v0.4.0**.
-2. Скачайте [docker-module.json v1.0.2](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.2/docker-module.json) и [checksums.txt](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.2/checksums.txt). Сверьте SHA-256 файла с записью в `checksums.txt`:
+2. Скачайте [docker-module.json v1.0.3](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.3/docker-module.json) и [checksums.txt](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.3/checksums.txt). Сверьте SHA-256 файла с записью в `checksums.txt`:
 
    ```bash
    sha256sum docker-module.json
@@ -69,7 +69,7 @@ Linux: `/var/run/docker.sock`. Windows: `\\.\pipe\docker_engine`. Для rootles
 
 ## Обновление и удаление
 
-Пакет v1.0.2 использует `id: docker`, `schemaVersion: 1`, `protocol: 1`. Версия модуля независима от панели и агента. Перед обновлением сохраните пакет и настройки, загрузите новую версию с тем же ID и проверьте назначения и результаты. Не переписывайте выпущенный пакет или тег: конфликт содержимого уже существующей версии отклоняется.
+Пакет v1.0.3 использует `id: docker`, `schemaVersion: 1`, `protocol: 1`. Версия модуля независима от панели и агента. Перед обновлением сохраните пакет и настройки, загрузите новую версию с тем же ID и проверьте назначения и результаты. Не переписывайте выпущенный пакет или тег: конфликт содержимого уже существующей версии отклоняется.
 
 Чтобы остановить сбор, выключите назначение на нужном сервере. Чтобы удалить модуль, уберите его в настройках панели; удалённая конфигурация больше не выдаётся агентам. Кэш бинарников может остаться в состоянии агента. Удаляйте его только при остановленном агенте и после проверки путей.
 
@@ -80,10 +80,10 @@ Linux: `/var/run/docker.sock`. Windows: `\\.\pipe\docker_engine`. Для rootles
 ```powershell
 go test ./...
 go vet ./...
-./scripts/build.ps1 -Version 1.0.2
+./scripts/build.ps1 -Version 1.0.3
 ```
 
-Скрипт использует toolchain Go 1.27.2. Результаты в `artifacts/releases/`: `docker-module.json`, `pulse-module-docker_v1.0.2_source.zip`, `checksums.txt`.
+Скрипт использует toolchain Go 1.27.2. Результаты в `artifacts/releases/`: `docker-module.json`, `pulse-module-docker_v1.0.3_source.zip`, `checksums.txt`.
 
 Процесс получает один JSON `{"protocol":1,"config":{}}` через stdin и возвращает один JSON-объект через stdout с кодом завершения 0. Диагностика идёт в stderr; агент не передаёт его в панель. Лимит stdout — **512 KiB**, скачивание и выполнение разделяют бюджет **5 секунд**. См. [протокол модулей](https://github.com/HubbaBubbaPrepod/pulse-monitor/blob/main/docs/MODULES.md).
 
@@ -106,3 +106,7 @@ CI запускает `go vet` и тесты на Linux и Windows, а race dete
 ## Лицензия
 
 [MIT](LICENSE). Вклад участников распространяется под той же лицензией.
+
+## Marketplace
+
+Репозиторий содержит маркер `pulse-marketplace.json` и topic `pulse-module`. Маркер должен находиться и в исходниках тега релиза; установочным пакетом остаётся `docker-module.json` из assets. Marketplace проверяет конкретную версию и SHA-256, затем ставит её в очередь независимой модерации. Наличие релиза на GitHub не означает одобрения в каталоге. Ручная установка JSON остаётся доступной.

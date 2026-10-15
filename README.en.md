@@ -22,7 +22,7 @@ Pulse Monitor ← cards, table, charts and logs ← JSON result
 ## Installation
 
 1. Install [Pulse Monitor](https://github.com/HubbaBubbaPrepod/pulse-monitor) and [Pulse Agent](https://github.com/HubbaBubbaPrepod/pulse-agent), then connect a real server. The first public set uses dashboard and agent **v0.4.0**.
-2. Download [docker-module.json v1.0.2](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.2/docker-module.json) and [checksums.txt](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.2/checksums.txt). Compare the file's SHA-256 with its entry in `checksums.txt`:
+2. Download [docker-module.json v1.0.3](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.3/docker-module.json) and [checksums.txt](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.3/checksums.txt). Compare the file's SHA-256 with its entry in `checksums.txt`:
 
    ```bash
    sha256sum docker-module.json
@@ -69,7 +69,7 @@ The native process runs with the agent's privileges without a sandbox. The `perm
 
 ## Updates and removal
 
-Package v1.0.2 uses `id: docker`, `schemaVersion: 1`, and `protocol: 1`. Its version is independent of the dashboard and agent. Save the current package and settings before updating, upload the new version with the same ID, then check assignments and results. Do not overwrite a released package or tag: conflicting content for an existing version is rejected.
+Package v1.0.3 uses `id: docker`, `schemaVersion: 1`, and `protocol: 1`. Its version is independent of the dashboard and agent. Save the current package and settings before updating, upload the new version with the same ID, then check assignments and results. Do not overwrite a released package or tag: conflicting content for an existing version is rejected.
 
 Disable the assignment on a server to stop collection. Remove the module in dashboard settings to delete it; the removed configuration is no longer sent to agents. Cached binaries may remain in the agent's state directory. Remove them only with the agent stopped and after verifying the paths.
 
@@ -80,10 +80,10 @@ Requirements: Go 1.23+ and PowerShell 7.4+ for packaging. Go must be in PATH; us
 ```powershell
 go test ./...
 go vet ./...
-./scripts/build.ps1 -Version 1.0.2
+./scripts/build.ps1 -Version 1.0.3
 ```
 
-The script uses the Go 1.27.2 toolchain. Outputs in `artifacts/releases/`: `docker-module.json`, `pulse-module-docker_v1.0.2_source.zip`, and `checksums.txt`.
+The script uses the Go 1.27.2 toolchain. Outputs in `artifacts/releases/`: `docker-module.json`, `pulse-module-docker_v1.0.3_source.zip`, and `checksums.txt`.
 
 The process receives one JSON document, `{"protocol":1,"config":{}}`, on stdin and returns one JSON object on stdout with exit code 0. Diagnostics go to stderr; the agent does not forward stderr to the dashboard. stdout is limited to **512 KiB**; download and execution share a **5-second** budget. See the [module protocol](https://github.com/HubbaBubbaPrepod/pulse-monitor/blob/main/docs/MODULES.md).
 
@@ -106,3 +106,7 @@ CI runs `go vet` and tests on Linux and Windows, plus the race detector on Linux
 ## License
 
 [MIT](LICENSE). Contributions use the same license.
+
+## Marketplace
+
+The repository includes `pulse-marketplace.json` and the `pulse-module` topic. The marker must also exist at the release tag's commit; `docker-module.json` from release assets remains the installable package. Marketplace validates the exact version and SHA-256, then queues it for independent moderation. A GitHub release does not imply catalog approval. Manual JSON installation remains available.

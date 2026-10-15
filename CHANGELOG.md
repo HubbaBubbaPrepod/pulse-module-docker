@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+## 1.0.3
+
+### Added
+
+- Add the `pulse-module` discovery marker for Pulse Marketplace and include it in the source archive.
+- Keep the native collector behavior and schema-1 installation protocol unchanged. Marketplace publication requires independent moderation; discovery is not approval.
+
 ## 1.0.2
 
 ### Fixed
