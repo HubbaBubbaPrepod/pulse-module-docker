@@ -233,8 +233,14 @@ func collect(ctx context.Context, client *http.Client, logContainer string) (map
 }
 func run() error {
 	var input struct {
-		Protocol int `json:"protocol"`
-		Config   struct {
+		Protocol int    `json:"protocol"`
+		Trigger  string `json:"trigger"`
+		Action   string `json:"action"`
+		Input    struct {
+			ContainerID string `json:"containerId"`
+		} `json:"input"`
+		Grants []string `json:"grants"`
+		Config struct {
 			Socket       string `json:"socket"`
 			LogContainer string `json:"logContainer"`
 		} `json:"config"`
@@ -242,7 +248,7 @@ func run() error {
 	if err := json.NewDecoder(io.LimitReader(os.Stdin, 16384)).Decode(&input); err != nil {
 		return err
 	}
-	if input.Protocol != 1 {
+	if input.Protocol != 1 && input.Protocol != 2 {
 		return errors.New("Unsupported collector protocol")
 	}
 	client, cleanup, err := dockerClient(input.Config.Socket)
@@ -250,11 +256,32 @@ func run() error {
 		return err
 	}
 	defer cleanup()
-	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	budget := 4 * time.Second
+	if input.Protocol == 2 && input.Trigger == "manual" {
+		budget = 20 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), budget)
 	defer cancel()
+	if input.Protocol == 2 && input.Trigger == "manual" {
+		data, operationErr := handleDockerOperation(ctx, client, input.Action, input.Input.ContainerID, input.Grants)
+		status, message := "ok", ""
+		if operationErr != nil {
+			status = "error"
+			var uncertain *uncertainDockerError
+			if errors.As(operationErr, &uncertain) {
+				status = "unknown"
+			}
+			message = operationErr.Error()
+			data = map[string]any{}
+		}
+		return json.NewEncoder(os.Stdout).Encode(map[string]any{"protocol": 2, "status": status, "data": data, "error": message})
+	}
 	result, err := collect(ctx, client, input.Config.LogContainer)
 	if err != nil {
 		return err
+	}
+	if input.Protocol == 2 {
+		return json.NewEncoder(os.Stdout).Encode(map[string]any{"protocol": 2, "status": "ok", "data": result})
 	}
 	return json.NewEncoder(os.Stdout).Encode(result)
 }

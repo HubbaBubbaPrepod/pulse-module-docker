@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "protocol": 1,
   "id": "docker",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "name": "Docker",
   "author": "Pulse contributors",
   "description": "Local Docker Engine: containers, resource usage and container logs.",
@@ -29,10 +29,22 @@
       "title": "Docker Engine",
       "key": "engine",
       "columns": [
-        { "key": "version", "label": "Version" },
-        { "key": "containers", "label": "Containers" },
-        { "key": "running", "label": "Running" },
-        { "key": "truncated", "label": "List limited to 100" }
+        {
+          "key": "version",
+          "label": "Version"
+        },
+        {
+          "key": "containers",
+          "label": "Containers"
+        },
+        {
+          "key": "running",
+          "label": "Running"
+        },
+        {
+          "key": "truncated",
+          "label": "List limited to 100"
+        }
       ]
     },
     {
@@ -40,14 +52,47 @@
       "title": "Containers",
       "key": "containers",
       "columns": [
-        { "key": "name", "label": "Name" },
-        { "key": "image", "label": "Image" },
-        { "key": "state", "label": "State" },
-        { "key": "cpu", "label": "CPU", "unit": "%" },
-        { "key": "memory", "label": "Memory", "unit": "MiB" },
-        { "key": "memoryLimit", "label": "Memory limit", "unit": "MiB" },
-        { "key": "networkIn", "label": "Network received", "unit": "MiB" },
-        { "key": "networkOut", "label": "Network sent", "unit": "MiB" }
+        {
+          "key": "id",
+          "label": "Container ID"
+        },
+        {
+          "key": "name",
+          "label": "Name"
+        },
+        {
+          "key": "image",
+          "label": "Image"
+        },
+        {
+          "key": "state",
+          "label": "State"
+        },
+        {
+          "key": "cpu",
+          "label": "CPU",
+          "unit": "%"
+        },
+        {
+          "key": "memory",
+          "label": "Memory",
+          "unit": "MiB"
+        },
+        {
+          "key": "memoryLimit",
+          "label": "Memory limit",
+          "unit": "MiB"
+        },
+        {
+          "key": "networkIn",
+          "label": "Network received",
+          "unit": "MiB"
+        },
+        {
+          "key": "networkOut",
+          "label": "Network sent",
+          "unit": "MiB"
+        }
       ]
     },
     {
@@ -55,11 +100,24 @@
       "title": "Container resource usage",
       "key": "usage",
       "columns": [
-        { "key": "cpu", "label": "CPU total", "unit": "%" },
-        { "key": "memory", "label": "Memory total", "unit": "MiB" }
+        {
+          "key": "cpu",
+          "label": "CPU total",
+          "unit": "%"
+        },
+        {
+          "key": "memory",
+          "label": "Memory total",
+          "unit": "MiB"
+        }
       ]
     },
-    { "kind": "logs", "title": "Container logs", "key": "logs", "columns": [] }
+    {
+      "kind": "logs",
+      "title": "Container logs",
+      "key": "logs",
+      "columns": []
+    }
   ],
   "binaries": {}
 }

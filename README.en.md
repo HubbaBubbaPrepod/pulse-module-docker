@@ -110,3 +110,11 @@ CI runs `go vet` and tests on Linux and Windows, plus the race detector on Linux
 ## Marketplace
 
 The repository includes `pulse-marketplace.json` and the `pulse-module` topic. The marker must also exist at the release tag's commit; `docker-module.json` from release assets remains the installable package. Marketplace validates the exact version and SHA-256, then queues it for independent moderation. A GitHub release does not imply catalog approval. Manual JSON installation remains available.
+
+## Interactive v2 (unreleased)
+
+The development build emits `docker-module.json` (2.0.0-alpha1, schema2) and `docker-module-v1.json` (1.0.4, compatibility schema1). Existing published1.0.3 remains unchanged. Interactive v2 requires the unreleased module-runtime builds of both Pulse Monitor and Agent; published0.4.0 does not support it. No minimum stable release is claimed yet.
+
+V2 shows/copies full container IDs, uses standard Pulse resource charts, and opens the clicked container's last200 log lines without changing shared configuration. Start/restart/stop require explicit `actions.execute` per node, confirmation and a full64-character ID. Stop/restart use a5-second grace period within a20-second request budget. Lost responses may produce an unknown outcome; inspect actual state before retrying. Commands are never automatically replayed. Collection continues with no management grant. Container logs may contain secrets.
+
+Build v2 with `./scripts/build.ps1 -GoExe D:/Go/bin/go.exe -GoToolchain local -Version 2.0.0-alpha1`. For an explicitly legacy release, use `-Version 1.0.4 -LegacyOnly`; its primary package remains schema1. Uploading v2 disables component settings/grants until explicit configuration. Remove the active v1 installation first when migrating the same ID; saved configuration is not migrated automatically.

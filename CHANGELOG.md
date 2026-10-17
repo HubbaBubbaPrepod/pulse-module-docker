@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Fix Windows named pipe transport with go-winio v0.6.2, context cancellation and the 20-second manual operation budget.
+
+- Add schema2 selected-container logs and scoped start/restart/stop operations with bounded grace/deadlines and unknown outcomes. Retain schema1 collector behavior, add container IDs, and build separate v1 compatibility artifacts.
+
 ## 1.0.3
 
 ### Added

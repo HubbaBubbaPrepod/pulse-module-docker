@@ -19,5 +19,5 @@ func dockerClient(socket string) (*http.Client, func(), error) {
 	transport := &http.Transport{DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 		return (&net.Dialer{}).DialContext(ctx, "unix", socket)
 	}}
-	return &http.Client{Transport: transport, Timeout: 3 * time.Second}, transport.CloseIdleConnections, nil
+	return &http.Client{Transport: transport, Timeout: 20 * time.Second}, transport.CloseIdleConnections, nil
 }

@@ -36,7 +36,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build archives
         shell: pwsh
-        run: ./scripts/build.ps1 -Version $env:GITHUB_REF_NAME
+        run: |
+          $legacyOnly = $env:GITHUB_REF_NAME -match '^v1\.'
+          ./scripts/build.ps1 -Version $env:GITHUB_REF_NAME -LegacyOnly:$legacyOnly
       - name: Publish release assets
         shell: pwsh
         env:
