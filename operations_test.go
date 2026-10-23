@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -43,8 +44,18 @@ func TestContainerLogsUseSelectedFullID(t *testing.T) {
 func TestContainerControlRequiresGrantAndExactTarget(t *testing.T) {
 	id := strings.Repeat("c", 64)
 	var calls atomic.Int32
+	lastAction := ""
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" && strings.HasSuffix(r.URL.Path, "/json") {
+			started := "2026-10-23T10:00:00Z"
+			if lastAction == "restart" {
+				started = "2026-10-23T10:00:01Z"
+			}
+			fmt.Fprintf(w, `{"Id":%q,"State":{"Running":%t,"StartedAt":%q}}`, id, lastAction != "stop", started)
+			return
+		}
 		calls.Add(1)
+		lastAction = strings.TrimPrefix(r.URL.Path, "/containers/"+id+"/")
 		if r.Method != "POST" || !strings.HasPrefix(r.URL.Path, "/containers/"+id+"/") {
 			t.Error("wrong target/method", r.Method, r.URL.Path)
 		}
@@ -87,6 +98,10 @@ func TestContainerControlHandlesEngineResponses(t *testing.T) {
 	}{{"already running", "start", 304, true}, {"already stopped", "stop", 304, true}, {"restart conflict", "restart", 409, false}, {"deleted", "stop", 404, false}, {"engine failure", "start", 500, false}} {
 		t.Run(tc.name, func(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == "GET" {
+					fmt.Fprintf(w, `{"Id":%q,"State":{"Running":%t,"StartedAt":"2026-10-23T10:00:00Z"}}`, strings.Repeat("d", 64), tc.action != "stop")
+					return
+				}
 				w.WriteHeader(tc.status)
 				w.Write([]byte("private engine diagnostic"))
 			}))
@@ -123,6 +138,10 @@ func TestSelectedLogsDecodeFramesAndRejectTruncation(t *testing.T) {
 
 func TestControlLostResponseHasUnknownOutcome(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			fmt.Fprintf(w, `{"Id":%q,"State":{"Running":true,"StartedAt":"2026-10-23T10:00:00Z"}}`, strings.Repeat("a", 64))
+			return
+		}
 		connection, _, err := w.(http.Hijacker).Hijack()
 		if err == nil {
 			connection.Close()

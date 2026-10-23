@@ -47,6 +47,10 @@ func TestWindowsDockerPipeSupportsFullDuplexHTTP(t *testing.T) {
 }
 func TestWindowsDockerPipeAllowsBoundedGraceAndCancellation(t *testing.T) {
 	client, cleanup := pipeEngineFixture(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/json") {
+			fmt.Fprintf(w, `{"Id":%q,"State":{"Running":false}}`, strings.Repeat("a", 64))
+			return
+		}
 		select {
 		case <-time.After(3250 * time.Millisecond):
 			w.WriteHeader(204)

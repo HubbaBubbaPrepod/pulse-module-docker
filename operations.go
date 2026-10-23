@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -75,6 +76,16 @@ func handleDockerOperation(ctx context.Context, client *http.Client, action, id 
 	if !slices.Contains(grants, "actions.execute") {
 		return nil, errors.New("Container management is not granted")
 	}
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+	previousStart := ""
+	if action == "restart" {
+		before, err := inspectContainer(ctx, client, id)
+		if err != nil || before.StartedAt == "" {
+			return nil, errors.New("Could not inspect container before restart; no action was sent")
+		}
+		previousStart = before.StartedAt
+	}
 	endpoint := "http://docker/containers/" + id + "/" + action
 	if action == "stop" || action == "restart" {
 		endpoint += "?t=5"
@@ -91,14 +102,72 @@ func handleDockerOperation(ctx context.Context, client *http.Client, action, id 
 	io.Copy(io.Discard, io.LimitReader(response.Body, 4096))
 	if response.StatusCode == 204 {
 		result["outcome"] = "completed"
-		return result, nil
-	}
-	if response.StatusCode == 304 && (action == "start" || action == "stop") {
+	} else if response.StatusCode == 304 && (action == "start" || action == "stop") {
 		result["outcome"] = "already-in-state"
-		return result, nil
-	}
-	if response.StatusCode >= 500 {
+	} else if response.StatusCode >= 500 {
 		return nil, &uncertainDockerError{fmt.Sprintf("Docker control returned HTTP %d; verify the observed container state", response.StatusCode)}
+	} else {
+		return nil, fmt.Errorf("Docker control returned HTTP %d", response.StatusCode)
 	}
-	return nil, fmt.Errorf("Docker control returned HTTP %d", response.StatusCode)
+	// Acknowledgement is not readiness. Never repeat the mutation while
+	// reconciling an uncertain result; only observe the exact container.
+	for {
+		state, err := inspectContainer(ctx, client, id)
+		if err == nil && state.matches(action, previousStart) {
+			result["stateVerified"] = true
+			result["running"] = *state.Running
+			result["startedAt"] = state.StartedAt
+			if state.Health != nil {
+				result["health"] = state.Health.Status
+			}
+			return result, nil
+		}
+		timer := time.NewTimer(200 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return nil, &uncertainDockerError{"Docker acknowledged the action, but its resulting state/readiness could not be verified before the deadline"}
+		case <-timer.C:
+		}
+	}
+}
+
+type containerOperationState struct {
+	Running                  *bool
+	Paused, Restarting, Dead bool
+	StartedAt                string
+	Health                   *struct{ Status string }
+}
+
+func inspectContainer(ctx context.Context, client *http.Client, id string) (containerOperationState, error) {
+	var out struct {
+		ID    string `json:"Id"`
+		State *containerOperationState
+	}
+	raw, err := get(ctx, client, "/containers/"+id+"/json")
+	if err != nil {
+		return containerOperationState{}, err
+	}
+	if json.Unmarshal(raw, &out) != nil || out.ID != id || out.State == nil || out.State.Running == nil {
+		return containerOperationState{}, errors.New("Invalid container inspection response")
+	}
+	return *out.State, nil
+}
+
+func (s containerOperationState) matches(action, previousStart string) bool {
+	if s.Running == nil || s.Restarting || s.Dead || s.Paused {
+		return false
+	}
+	if action == "stop" {
+		return !*s.Running
+	}
+	if !*s.Running || (s.Health != nil && s.Health.Status != "healthy") {
+		return false
+	}
+	if action == "restart" {
+		before, err := time.Parse(time.RFC3339Nano, previousStart)
+		after, afterErr := time.Parse(time.RFC3339Nano, s.StartedAt)
+		return err == nil && afterErr == nil && after.After(before)
+	}
+	return true
 }

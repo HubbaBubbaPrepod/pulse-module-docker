@@ -4,7 +4,7 @@
 
 ## Setup and checks
 
-Install Go 1.23+ and, for packaging, PowerShell 7.4+. Clone the repository and run from its root:
+Install Go 1.25+ and, for packaging, PowerShell 7.4+. Clone the repository and run from its root:
 
 ```powershell
 git clone https://github.com/HubbaBubbaPrepod/pulse-module-docker.git

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "protocol": 1,
   "id": "docker",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "name": "Docker",
   "author": "Pulse contributors",
   "description": "Local Docker Engine: containers, resource usage and container logs.",

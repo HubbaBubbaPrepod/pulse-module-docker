@@ -75,7 +75,7 @@ Disable the assignment on a server to stop collection. Remove the module in dash
 
 ## Build and protocol
 
-Requirements: Go 1.23+ and PowerShell 7.4+ for packaging. Go must be in PATH; use `-GoExe` for another path.
+Requirements: Go 1.25+ and PowerShell 7.4+ for packaging. Go must be in PATH; use `-GoExe` for another path.
 
 ```powershell
 go test ./...

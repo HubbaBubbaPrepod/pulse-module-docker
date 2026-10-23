@@ -75,7 +75,7 @@ Linux: `/var/run/docker.sock`. Windows: `\\.\pipe\docker_engine`. Для rootles
 
 ## Сборка и протокол
 
-Нужны Go 1.23+ и PowerShell 7.4+ для упаковки. Go должен быть в PATH; для другого пути используйте параметр `-GoExe`.
+Нужны Go 1.25+ и PowerShell 7.4+ для упаковки. Go должен быть в PATH; для другого пути используйте параметр `-GoExe`.
 
 ```powershell
 go test ./...

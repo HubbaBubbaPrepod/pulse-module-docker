@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+- Update the existing Windows support dependency to fix Unicode length validation; source builds now require Go 1.25+, release builds use Go 1.27.3.
+
+- Verify exact-container state after start/stop/restart; wait for configured healthchecks and confirm a new StartedAt after restart.
+- Preserve unknown outcomes when readiness cannot be established within the 20-second budget; never repeat a mutation automatically.
+- Build release archives with Go 1.27.3.
+
 - Fix Windows named pipe transport with go-winio v0.6.2, context cancellation and the 20-second manual operation budget.
 
 - Add schema2 selected-container logs and scoped start/restart/stop operations with bounded grace/deadlines and unknown outcomes. Retain schema1 collector behavior, add container IDs, and build separate v1 compatibility artifacts.

@@ -4,7 +4,7 @@
 
 ## Подготовка и проверки
 
-Установите Go 1.23+ и PowerShell 7.4+ для упаковки. Клонируйте репозиторий и выполните из его корня:
+Установите Go 1.25+ и PowerShell 7.4+ для упаковки. Клонируйте репозиторий и выполните из его корня:
 
 ```powershell
 git clone https://github.com/HubbaBubbaPrepod/pulse-module-docker.git
