@@ -4,7 +4,7 @@
 
 [Русский](README.md) · **English**
 
-> A native Docker Engine collector for Pulse Monitor and Pulse Agent.
+> Docker monitoring and selected-container control for Pulse, with an isolated WASI guest and native compatibility packages.
 
 [![CI](https://github.com/HubbaBubbaPrepod/pulse-module-docker/actions/workflows/ci.yml/badge.svg)](https://github.com/HubbaBubbaPrepod/pulse-module-docker/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/HubbaBubbaPrepod/pulse-module-docker)](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases)
@@ -19,7 +19,17 @@ Pulse Monitor → server module assignment → Pulse Agent → collector → Doc
 Pulse Monitor ← cards, table, charts and logs ← JSON result
 ```
 
-## Installation
+## Isolated WASI package (v3)
+
+`manifest-wasi.json` targets Monitor 0.7.0+ and Agent 0.6.0+. Build with `./scripts/build.ps1`; the primary `artifacts/releases/docker-module.json` contains one `wasip1-wasm` artifact for Linux and Windows hosts. Go is not needed on the server. Import that JSON or install an individually approved Marketplace version, then configure each node separately.
+
+Grant `docker.read` for container/resource snapshots. Selected-container logs additionally need `docker.logs`; start/restart/stop need both `docker.control` and `actions.execute`. These grants are optional, so monitoring works without container control. Click the required container row to read its logs or request an action. Runtime changes disable old configurations and require renewed consent.
+
+The guest has no mounted host files, inherited credentials, direct network, subprocess or Docker socket access. The Agent broker uses the fixed local Docker endpoint and verifies the exact selected container's state, healthcheck and new start time after restart. Uncertain outcomes remain `unknown` and are not retried automatically. WASI limits: 128 MiB guest linear memory, 30 seconds per invocation, 512 KiB output; linear memory is not a total host-RSS quota.
+
+The root Go entry and `manifest-v2.json` remain native compatibility sources. Build a native v2 package with `./scripts/build.ps1 -Version 2.0.0-alpha3`, or a v1 package with `-Version 1.0.6 -LegacyOnly`. Use new versions for changed bytes; never overwrite a published release. Native components require full trust in their publisher. The remaining installation/configuration notes below describe the legacy v1 package.
+
+## Legacy installation
 
 1. Install [Pulse Monitor](https://github.com/HubbaBubbaPrepod/pulse-monitor) and [Pulse Agent](https://github.com/HubbaBubbaPrepod/pulse-agent), then connect a real server. The first public set uses dashboard and agent **v0.4.0**.
 2. Download [docker-module.json v1.0.3](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.3/docker-module.json) and [checksums.txt](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.3/checksums.txt). Compare the file's SHA-256 with its entry in `checksums.txt`:

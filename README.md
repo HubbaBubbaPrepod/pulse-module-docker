@@ -4,7 +4,7 @@
 
 **Русский** · [English](README.en.md)
 
-> Нативный сборщик Docker Engine для Pulse Monitor и Pulse Agent.
+> Мониторинг Docker и управление выбранным контейнером: изолированный WASI-гость и нативные пакеты совместимости.
 
 [![CI](https://github.com/HubbaBubbaPrepod/pulse-module-docker/actions/workflows/ci.yml/badge.svg)](https://github.com/HubbaBubbaPrepod/pulse-module-docker/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/HubbaBubbaPrepod/pulse-module-docker)](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases)
@@ -19,7 +19,17 @@ Pulse Monitor → назначение модуля серверу → Pulse Age
 Pulse Monitor ← карточки, таблица, графики и журналы ← JSON-результат
 ```
 
-## Установка
+## Изолированный пакет WASI (v3)
+
+`manifest-wasi.json` предназначен для Monitor 0.7.0+ и Agent 0.6.0+. Сборка: `./scripts/build.ps1`. Основной `artifacts/releases/docker-module.json` содержит один артефакт `wasip1-wasm` для Linux и Windows. Go на сервере не нужен. Загрузите JSON в Monitor или установите отдельно одобренную версию из Marketplace, затем настройте каждый узел.
+
+Для списка контейнеров и ресурсов выдайте `docker.read`. Для логов выбранного контейнера дополнительно нужен `docker.logs`; для запуска, перезапуска и остановки — одновременно `docker.control` и `actions.execute`. Дополнительные разрешения необязательны: мониторинг работает без управления. Логи и действия открываются по нужной строке контейнера. Смена runtime отключает прежние настройки до повторного подтверждения разрешений.
+
+У гостя нет смонтированных файлов хоста, унаследованных секретов, прямого доступа к сети, запуску процессов или Docker socket. Посредник агента использует фиксированный локальный адрес Docker и проверяет состояние выбранного контейнера, healthcheck и новое время запуска после перезапуска. Неопределённый результат остаётся `unknown`; команда автоматически не повторяется. Ограничения WASI: 128 MiB линейной памяти гостя, 30 секунд на запуск, 512 KiB вывода. Лимит линейной памяти не ограничивает весь RSS процесса хоста.
+
+Корневой Go-сборщик и `manifest-v2.json` сохранены для нативной совместимости. Сборка нативного v2: `./scripts/build.ps1 -Version 2.0.0-alpha3`; v1: `-Version 1.0.6 -LegacyOnly`. Для изменённых байтов всегда выпускайте новую версию, не перезаписывайте опубликованные релизы. Нативный код требует полного доверия к автору. Инструкции установки и параметров ниже относятся к прежнему пакету v1.
+
+## Установка legacy-пакета
 
 1. Установите [Pulse Monitor](https://github.com/HubbaBubbaPrepod/pulse-monitor) и [Pulse Agent](https://github.com/HubbaBubbaPrepod/pulse-agent), подключите реальный сервер. Первый публичный набор использует панель и агент **v0.4.0**.
 2. Скачайте [docker-module.json v1.0.3](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.3/docker-module.json) и [checksums.txt](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases/download/v1.0.3/checksums.txt). Сверьте SHA-256 файла с записью в `checksums.txt`:

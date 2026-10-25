@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 2,
+  "protocol": 2,
+  "id": "docker",
+  "version": "3.0.0-alpha1",
+  "name": "Docker",
+  "author": "Pulse contributors",
+  "description": "Local Docker Engine: containers, resource usage and container logs.",
+  "permissions": [
+    "The Agent broker reads local Docker metrics and selected-container logs. Container control requires separate docker.control and actions.execute grants. The WASI guest has no direct Docker socket, filesystem, network or process access."
+  ],
+  "components": [
+    {
+      "id": "engine",
+      "location": "agent",
+      "protocol": 2,
+      "requires": ["docker.read"],
+      "fields": [],
+      "triggers": [
+        {
+          "type": "interval",
+          "seconds": 5
+        },
+        {
+          "type": "manual",
+          "action": "logs",
+          "label": "Container logs",
+          "mutating": false,
+          "inputKey": "containerId",
+          "inputFields": [
+            {
+              "key": "containerId",
+              "label": "Container ID",
+              "type": "text",
+              "required": true
+            }
+          ],
+          "resultView": "logs",
+          "requires": ["docker.logs"]
+        },
+        {
+          "type": "manual",
+          "action": "start",
+          "label": "Start container",
+          "mutating": true,
+          "inputKey": "containerId",
+          "inputFields": [
+            {
+              "key": "containerId",
+              "label": "Container ID",
+              "type": "text",
+              "required": true
+            }
+          ],
+          "when": {
+            "key": "state",
+            "values": ["created", "exited", "dead"]
+          },
+          "requires": ["docker.control", "actions.execute"]
+        },
+        {
+          "type": "manual",
+          "action": "restart",
+          "label": "Restart container (5s grace)",
+          "mutating": true,
+          "inputKey": "containerId",
+          "inputFields": [
+            {
+              "key": "containerId",
+              "label": "Container ID",
+              "type": "text",
+              "required": true
+            }
+          ],
+          "when": {
+            "key": "state",
+            "values": ["running", "paused", "restarting"]
+          },
+          "requires": ["docker.control", "actions.execute"]
+        },
+        {
+          "type": "manual",
+          "action": "stop",
+          "label": "Stop container (5s grace)",
+          "mutating": true,
+          "inputKey": "containerId",
+          "inputFields": [
+            {
+              "key": "containerId",
+              "label": "Container ID",
+              "type": "text",
+              "required": true
+            }
+          ],
+          "when": {
+            "key": "state",
+            "values": ["running", "paused", "restarting"]
+          },
+          "requires": ["docker.control", "actions.execute"]
+        }
+      ],
+      "views": [
+        {
+          "kind": "cards",
+          "title": "Docker Engine",
+          "key": "engine",
+          "columns": [
+            {
+              "key": "version",
+              "label": "Version"
+            },
+            {
+              "key": "containers",
+              "label": "Containers"
+            },
+            {
+              "key": "running",
+              "label": "Running"
+            },
+            {
+              "key": "truncated",
+              "label": "List limited to 100"
+            }
+          ]
+        },
+        {
+          "kind": "table",
+          "title": "Containers",
+          "key": "containers",
+          "columns": [
+            {
+              "key": "id",
+              "label": "Container ID"
+            },
+            {
+              "key": "name",
+              "label": "Name"
+            },
+            {
+              "key": "image",
+              "label": "Image"
+            },
+            {
+              "key": "state",
+              "label": "State"
+            },
+            {
+              "key": "cpu",
+              "label": "CPU",
+              "unit": "%"
+            },
+            {
+              "key": "memory",
+              "label": "Memory",
+              "unit": "MiB"
+            },
+            {
+              "key": "memoryLimit",
+              "label": "Memory limit",
+              "unit": "MiB"
+            },
+            {
+              "key": "networkIn",
+              "label": "Network received",
+              "unit": "MiB"
+            },
+            {
+              "key": "networkOut",
+              "label": "Network sent",
+              "unit": "MiB"
+            }
+          ],
+          "rowKey": "id",
+          "actions": ["logs", "start", "restart", "stop"]
+        },
+        {
+          "kind": "chart",
+          "title": "Container resource usage",
+          "key": "usage",
+          "columns": [
+            {
+              "key": "cpu",
+              "label": "CPU total",
+              "unit": "%"
+            },
+            {
+              "key": "memory",
+              "label": "Memory total",
+              "unit": "MiB"
+            }
+          ]
+        }
+      ],
+      "binaries": {},
+      "runtime": "wasip1",
+      "optionalCapabilities": ["docker.logs", "docker.control", "actions.execute"]
+    }
+  ]
+}
