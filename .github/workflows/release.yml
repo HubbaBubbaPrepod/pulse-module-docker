@@ -45,5 +45,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $assets = Get-ChildItem artifacts/releases -File | Where-Object { $_.Extension -in '.zip', '.json' -or $_.Name -eq 'checksums.txt' } | ForEach-Object FullName
-          gh release create $env:GITHUB_REF_NAME @assets --verify-tag --title $env:GITHUB_REF_NAME --generate-notes
+          $previewArgs = if ($env:GITHUB_REF_NAME -match '-') { @('--prerelease') } else { @() }
+          gh release create $env:GITHUB_REF_NAME @assets --verify-tag --title $env:GITHUB_REF_NAME --generate-notes @previewArgs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

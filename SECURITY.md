@@ -15,3 +15,7 @@ The native collector runs with the agent's account privileges and has no sandbox
 Download tagged [release assets](https://github.com/HubbaBubbaPrepod/pulse-module-docker/releases), verify `docker-module.json` against `checksums.txt`, and inspect the source where appropriate. SHA-256 establishes integrity, not publisher trust. Never replace published binary content under the same version.
 
 Logs may reveal application secrets or personal data. Select a log container deliberately and restrict dashboard access. If a package or account is compromised, disable the module assignment, stop the affected agent when needed, preserve evidence, rotate exposed credentials, and replace the package with a trusted release before resuming collection.
+
+## Isolated components
+
+WASI components use an embedded interpreter without host filesystem mounts, inherited secrets, raw network or native process access. Explicit broker grants authorize scoped Docker operations or configured notifications. The host runtime, broker and Docker daemon remain trusted; 128 MiB limits guest linear memory, not total host RSS. Native components remain full trust. See [the WASI contract](https://github.com/HubbaBubbaPrepod/pulse-monitor/blob/main/docs/MODULES-WASI.en.md).
