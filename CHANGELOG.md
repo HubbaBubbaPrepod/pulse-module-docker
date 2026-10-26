@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- Assign legacy compatibility rebuilds version 1.0.6; reject changed bytes under the published 1.0.5 reference during release checks.
+
 - Add a broker-backed WASI guest and schema-2 v3 package. Keep native v1/v2 source and legacy v1 release artifacts. The guest has no direct Docker socket access; the Agent retains state/readiness verification.
 
 - Update the existing Windows support dependency to fix Unicode length validation; source builds now require Go 1.25+, release builds use Go 1.27.3.

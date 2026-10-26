@@ -27,6 +27,10 @@ jobs:
           go-version: '1.27.3'
           cache: false
 
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+
       - name: Check Go
         working-directory: .
         run: |
@@ -39,6 +43,8 @@ jobs:
         run: |
           $legacyOnly = $env:GITHUB_REF_NAME -match '^v1\.'
           ./scripts/build.ps1 -Version $env:GITHUB_REF_NAME -LegacyOnly:$legacyOnly
+      - name: Verify immutable compatibility package and checksums
+        run: node --test scripts/release.test.mjs
       - name: Publish release assets
         shell: pwsh
         env:
