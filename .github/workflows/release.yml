@@ -2,13 +2,27 @@ name: Release
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing immutable tag to build and publish
+        required: true
+        type: string
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 permissions:
   contents: read
 jobs:
   race:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate the release tag
+        shell: pwsh
+        run: |
+          if ($env:RELEASE_TAG -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z-]+)?$') { throw 'Invalid release tag' }
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '1.27.3'
@@ -22,6 +36,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: '1.27.3'
@@ -41,8 +57,8 @@ jobs:
       - name: Build archives
         shell: pwsh
         run: |
-          $legacyOnly = $env:GITHUB_REF_NAME -match '^v1\.'
-          ./scripts/build.ps1 -Version $env:GITHUB_REF_NAME -LegacyOnly:$legacyOnly
+          $legacyOnly = $env:RELEASE_TAG -match '^v1\.'
+          ./scripts/build.ps1 -Version $env:RELEASE_TAG -LegacyOnly:$legacyOnly
       - name: Verify immutable compatibility package and checksums
         run: node --test scripts/release.test.mjs
       - name: Publish release assets
@@ -51,6 +67,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $assets = Get-ChildItem artifacts/releases -File | Where-Object { $_.Extension -in '.zip', '.json' -or $_.Name -eq 'checksums.txt' } | ForEach-Object FullName
-          $previewArgs = if ($env:GITHUB_REF_NAME -match '-') { @('--prerelease') } else { @() }
-          gh release create $env:GITHUB_REF_NAME @assets --verify-tag --title $env:GITHUB_REF_NAME --generate-notes @previewArgs
+          [string[]]$previewArgs = @()
+          if ($env:RELEASE_TAG -match '-') { $previewArgs += '--prerelease' }
+          gh release create $env:RELEASE_TAG @assets --verify-tag --title $env:RELEASE_TAG --generate-notes @previewArgs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

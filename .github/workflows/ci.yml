@@ -21,6 +21,9 @@ jobs:
           go-version: '1.27.3'
           cache: false
       - run: go vet ./...
+      - name: Verify release command arguments
+        shell: pwsh
+        run: ./scripts/release-command.test.ps1
       - run: go test -shuffle=on -count=1 ./...
       - name: Build the isolated WASI guest
         env:
