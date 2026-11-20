@@ -81,7 +81,7 @@ func handleDockerOperation(ctx context.Context, client *http.Client, action, id 
 	previousStart := ""
 	if action == "restart" {
 		before, err := inspectContainer(ctx, client, id)
-		if err != nil || before.StartedAt == "" {
+		if _, parseErr := time.Parse(time.RFC3339Nano, before.StartedAt); err != nil || parseErr != nil {
 			return nil, errors.New("Could not inspect container before restart; no action was sent")
 		}
 		previousStart = before.StartedAt
@@ -96,7 +96,12 @@ func handleDockerOperation(ctx context.Context, client *http.Client, action, id 
 	}
 	response, err := client.Do(request)
 	if err != nil {
-		return nil, &uncertainDockerError{"Docker control request failed or timed out; verify the observed container state"}
+		proof, observeErr := observeDockerOperation(ctx, client, action, id, previousStart)
+		if observeErr != nil {
+			return nil, observeErr
+		}
+		proof["outcome"] = "state-observed"
+		return proof, nil
 	}
 	defer response.Body.Close()
 	io.Copy(io.Discard, io.LimitReader(response.Body, 4096))
@@ -105,28 +110,62 @@ func handleDockerOperation(ctx context.Context, client *http.Client, action, id 
 	} else if response.StatusCode == 304 && (action == "start" || action == "stop") {
 		result["outcome"] = "already-in-state"
 	} else if response.StatusCode >= 500 {
-		return nil, &uncertainDockerError{fmt.Sprintf("Docker control returned HTTP %d; verify the observed container state", response.StatusCode)}
+		return nil, &uncertainDockerError{fmt.Sprintf("Docker control returned HTTP %d; action was not replayed", response.StatusCode)}
 	} else {
 		return nil, fmt.Errorf("Docker control returned HTTP %d", response.StatusCode)
 	}
-	// Acknowledgement is not readiness. Never repeat the mutation while
-	// reconciling an uncertain result; only observe the exact container.
+
+	proof, err := observeDockerOperation(ctx, client, action, id, previousStart)
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range proof {
+		result[key] = value
+	}
+	return result, nil
+}
+
+// Observations never resend the control request, including after a lost reply.
+func observeDockerOperation(ctx context.Context, client *http.Client, action, id, previousStart string) (map[string]any, error) {
+	if !fullContainerID.MatchString(id) {
+		return nil, errors.New("Invalid verification target")
+	}
+	var stableSince time.Time
+	stableStartedAt := ""
 	for {
+		if ctx.Err() != nil {
+			return nil, &uncertainDockerError{"Docker outcome could not be verified before the deadline; action was not replayed"}
+		}
 		state, err := inspectContainer(ctx, client, id)
 		if err == nil && state.matches(action, previousStart) {
-			result["stateVerified"] = true
-			result["running"] = *state.Running
-			result["startedAt"] = state.StartedAt
-			if state.Health != nil {
-				result["health"] = state.Health.Status
+			stable := action == "stop" || state.Health != nil
+			if !stable {
+				if stableSince.IsZero() || state.StartedAt != stableStartedAt {
+					stableSince = time.Now()
+					stableStartedAt = state.StartedAt
+				}
+				stable = time.Since(stableSince) >= 3*time.Second
 			}
-			return result, nil
+			if stable {
+				result := map[string]any{"containerId": id, "action": action, "at": time.Now().UTC().Format(time.RFC3339Nano), "stateVerified": true, "running": *state.Running, "startedAt": state.StartedAt}
+				if state.Health != nil {
+					result["health"] = state.Health.Status
+					result["readiness"] = "docker-healthcheck"
+				} else if action != "stop" {
+					result["readiness"] = "container-running-stable"
+				} else {
+					result["readiness"] = "container-stopped"
+				}
+				return result, nil
+			}
+		} else {
+			stableSince = time.Time{}
 		}
 		timer := time.NewTimer(200 * time.Millisecond)
 		select {
 		case <-ctx.Done():
 			timer.Stop()
-			return nil, &uncertainDockerError{"Docker acknowledged the action, but its resulting state/readiness could not be verified before the deadline"}
+			return nil, &uncertainDockerError{"Docker outcome could not be verified before the deadline; action was not replayed"}
 		case <-timer.C:
 		}
 	}

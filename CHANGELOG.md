@@ -2,7 +2,9 @@
 
 # Changelog
 
-## Unreleased
+## [3.0.0-alpha2] — 2026-11-20
+
+- Verify observed Docker state after transport loss and require stable container startup without a healthcheck.
 
 - Assign legacy compatibility rebuilds version 1.0.6; reject changed bytes under the published 1.0.5 reference during release checks.
 
